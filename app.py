@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for
 from models.professores import professor_bp
 from models.alunos import alunos_bp
-from models.turmas import turmas_bp
+from controllers.turmas import turmas_bp
 
 app = Flask(__name__, template_folder='templates')
 

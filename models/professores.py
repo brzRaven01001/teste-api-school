@@ -67,6 +67,10 @@ def atualizar_professor(idProfessor):
     if professor:
         try:
             dados = request.json
+
+            if "nome" not in dados or not dados["nome"]:
+                return jsonify({"error": "Professor sem nome"}), 400
+
             professor['nome'] = dados.get("nome", professor['nome'])
             professor['idade'] = dados.get("idade", professor['idade'])
             professor['data_nascimento'] = dados.get("data_nascimento", professor['data_nascimento'])
@@ -78,6 +82,7 @@ def atualizar_professor(idProfessor):
             return jsonify({'error': 'Erro ao atualizar professor.', 'details': str(e)}), 500
 
     return jsonify({"error": "Professor não encontrado."}), 404
+
 
 
 @professor_bp.route("/<int:idProfessor>", methods=['DELETE'])
