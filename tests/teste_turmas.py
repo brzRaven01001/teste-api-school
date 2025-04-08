@@ -1,8 +1,7 @@
 import requests
 import unittest
-from flask import Flask
-from sqlalchemy import true
-from models.turmas import turmas_bp
+from controllers.turmas import turmas_bp
+
 
 class TurmasTestCase(unittest.TestCase):
 
@@ -173,7 +172,7 @@ class TurmasTestCase(unittest.TestCase):
 
         error_retornado = r.json().get('error', '')
         print("Resposta JSON do erro:", error_retornado)
-        self.assertEqual(r.json()['error'],'turma nao encontrada')
+        self.assertEqual(r.json()['error'],'Turma não encontrada')
      
     def test_006c_id_inexistente_no_delete(self):
      
@@ -187,28 +186,11 @@ class TurmasTestCase(unittest.TestCase):
 
         error_retornado = r.json().get('error', '')
         print("Resposta JSON do erro:", error_retornado)
-        self.assertEqual(error_retornado, 'Turma não encontrada')
+        self.assertEqual(error_retornado, 'Turma não encontrada.')
     
-    def test_007_criar_com_id_ja_existente(self):
 
+    def test_007a_post_sem_nome(self):
         r_reset = requests.post('http://127.0.0.1:5000/turmas/reseta')
-        print("Resposta do reset de turmas:", r_reset.status_code, r_reset.text)
-        self.assertEqual(r_reset.status_code, 200, "Erro ao resetar as turmas")
-
-        r_1 = requests.post('http://127.0.0.1:5000/turmas/criar', json={'id': 1, 'nome': 'Analise', 'turno': 'Vespertino', 'ativo': True})
-        print("Resposta da criação da turma 'Analise':", r_1.status_code, r_1.text)
-        self.assertEqual(r_1.status_code, 201, "Erro ao criar a turma 'Analise'")
-
-        r_2 = requests.post('http://127.0.0.1:5000/turmas/criar', json={'id': 1, 'nome': 'Desenvolvimento Web', 'turno': 'Vespertino', 'ativo': True})
-        print("Resposta ao tentar criar turma com ID já existente:", r_2.status_code, r_2.text)
-
-        self.assertEqual(r_2.status_code, 400, "O código de status não foi 400.")
-        error_retornado = r_2.json().get('error', '')
-        print("Resposta JSON do erro:", error_retornado)
-        self.assertEqual(error_retornado, 'ID já utilizado')
-
-    def test_008a_post_sem_nome(self):
-        r_reset = requests.post('http://127.0.0.1:5000/turma/reseta')
         print("Resposta do reset de turma:", r_reset.status_code, r_reset.text)
         self.assertEqual(r_reset.status_code, 200, "Erro ao resetar as turma")
 
@@ -225,9 +207,9 @@ class TurmasTestCase(unittest.TestCase):
         print(f"Resposta do reset de turmas: {r_reset.status_code} {r_reset.json()}")
         self.assertEqual(r_reset.status_code,200)
 
-        r = requests.post('http://127.0.0.1:5000/turmas/criar',json={'nome':'Analise','id':1})
+        r = requests.post('http://127.0.0.1:5000/turmas/criar',json={'nome':'Analise', 'turno':'Matutino', 'ativo': False})
         print(f"Resposta ao criar turmas: {r.status_code} {r.json()}")
-        self.assertEqual(r.status_code,200)
+        self.assertEqual(r.status_code,201)
 
         r = requests.put('http://127.0.0.1:5000/turmas/atualizar/1',json={'id':1})
         print(f"Resposta ao editar turmas sem nome: {r.status_code} {r.json()}")

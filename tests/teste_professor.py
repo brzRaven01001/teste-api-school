@@ -145,21 +145,21 @@ class ProfessoresTestCase(unittest.TestCase):
         print("Resposta do reset de professor:", r_reset.status_code, r_reset.text)
         self.assertEqual(r_reset.status_code,200)
 
-        r_criar =requests.post('http://127.0.0.1:5000/professor/criar', json={'id': 6, 'nome': 'Luis Araujo', 'idade': 56, 'datanasc': '03/04/1980', 'disciplina': 'Logica de Programação', 'salario': 4000.00})
+        r_criar =requests.post('http://127.0.0.1:5000/professor/criar', json={'id': 1, 'nome': 'Luis Araujo', 'idade': 56, 'data_nascimento': '03/04/1980', 'disciplina': 'Logica de Programação', 'salario': 4000.00})
         print("Resposta da criação:", r_criar.status_code, r_criar.text)
 
         r_antes = requests.get('http://127.0.0.1:5000/professor/filtrar/1')
         print("Resposta antes da edição:", r_antes.status_code, r_antes.json())
-        self.assertEqual(r_antes.json()['nome'],'Luis Araujo')
+        self.assertEqual(r_antes.json()['nome'], 'Luis Araujo')
 
-        r_editar = requests.put('http://127.0.0.1:5000/professor/atualizar/1', json={'nome':'Jorge'})
+        r_editar = requests.put('http://127.0.0.1:5000/professor/atualizar/1', json={'nome': 'Jorge'})
         print("Resposta da edição dos professor:", r_editar.status_code, r_editar.text)
 
         r_depois = requests.get('http://127.0.0.1:5000/professor/filtrar/1')
         print("Resposta depois da edição:", r_depois.status_code, r_depois.json())
 
-        self.assertEqual(r_depois.json()['nome'],'Jorge')
-        self.assertEqual(r_depois.json()['id'],1)
+        self.assertEqual(r_depois.json()['nome'], 'Jorge')
+        self.assertEqual(r_depois.json()['id'], 1)
 
 
     def test_006b_id_inexistente_no_get(self):

@@ -60,10 +60,14 @@ def filtrar_aluno(idAluno):
 @alunos_bp.route('/atualizar/<int:idAluno>', methods=['PUT'])
 def atualizar_aluno(idAluno):
     try:
+        dados = request.json
+        
+        if "nome" not in dados or not dados["nome"]:
+            return jsonify({"error": "alunos sem nome"}), 400
+
         alunos = dici["alunos"]
         for aluno in alunos:
             if aluno['id'] == idAluno:
-                dados = request.json
                 aluno['nome'] = dados.get("nome", aluno['nome'])
                 aluno['idade'] = dados.get("idade", aluno['idade'])
                 aluno['data_nascimento'] = dados.get("data_nascimento", aluno['data_nascimento'])
@@ -75,6 +79,7 @@ def atualizar_aluno(idAluno):
         return jsonify({"error": "Aluno não encontrado."}), 404
     except Exception as e:
         return jsonify({'error': 'Erro ao atualizar aluno.', 'details': str(e)}), 500
+
 
 
 @alunos_bp.route('/<int:idAluno>', methods=['DELETE'])

@@ -11,6 +11,14 @@ def listar_turmas():
 def criar_turma():
     try:
         data = request.json
+
+        if not data.get("nome"):
+            return jsonify({'error': 'Turma sem nome'}), 400
+        if not data.get("turno"):
+            return jsonify({'error': 'Turma sem turno'}), 400
+        if "ativo" not in data:
+            return jsonify({'error': 'Campo "ativo" obrigatório'}), 400
+
         nova_turma = turmas.adicionar_turma(
             nome=data["nome"],
             turno=data["turno"],
@@ -31,6 +39,10 @@ def filtrar_turma(idTurma):
 def atualizar_turma(idTurma):
     try:
         data = request.json
+
+        if not data.get('nome'):
+            return jsonify({'erro': 'turmas sem nome'}), 400
+
         turma_atualizada = turmas.atualizar_turma(
             idTurma,
             nome=data.get('nome'),
