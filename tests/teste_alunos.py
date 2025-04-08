@@ -1,6 +1,5 @@
 import requests
 import unittest
-from models.alunos import alunos_bp
 
 class AlunosTestCase(unittest.TestCase):
 
@@ -240,7 +239,3 @@ def runTests():
 
 if __name__ == '__main__':
     runTests()
-
-
-#  python -m unittest tests/teste_alunos.py
-
