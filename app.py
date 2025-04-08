@@ -1,6 +1,6 @@
 from flask import Flask, redirect, url_for
 from config import DevelopmentConfig
-from models.alunos import alunos_bp
+from controllers.alunos import alunos_bp
 from controllers.turmas import turmas_bp
 from controllers.professores import professores_bp
 
