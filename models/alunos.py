@@ -1,96 +1,57 @@
-from flask import request, jsonify, Blueprint
-from sqlalchemy import Null, null
+from database import db, Turmas
+from sqlalchemy.orm import Session
 
-dici = {
-    "alunos": [
-        {
-            "id": 1,
-            "nome": "Gustavo",
-            "idade": 20,
-            "data_nascimento": "15/03/2005",
-            "nota_primeiro_semestre": 9.1,
-            "nota_segundo_semestre": 7.9,
-            "media_final": None
-        }
-    ],
-}
+def listar_turmas(db: Session):
+    turmas = db.query(Turmas).all()
+    return [turma.to_dict() for turma in turmas]
 
-alunos_bp = Blueprint('alunos', __name__)
+def adicionar_turma(db: Session, dados: dict):
+    if not dados.get("nome") or not dados.get("turno"):
+        return {"error": "Nome e turno são obrigatórios."}, 400
 
-@alunos_bp.route('/listar', methods=['GET'])
-def listar_alunos():
-    return jsonify(dici["alunos"])
+    nova_turma = Turmas(
+        nome=dados["nome"],
+        turno=dados["turno"],
+        ativo=bool(dados.get("ativo", True))
+    )
 
+    db.add(nova_turma)
+    db.commit()
+    db.refresh(nova_turma)
+    return {"message": "Turma criada com sucesso!", "turma": nova_turma.to_dict()}, 201
 
-@alunos_bp.route('/criar', methods=['POST'])
-def criar_aluno():
-    try:
-        dados = request.json
-        if not dados.get("nome") or not dados.get("idade"):
-            return jsonify({"error": "Nome e idade são obrigatórios."}), 400
+def filtrar_por_id(db: Session, idTurma: int):
+    turma = db.query(Turmas).filter(Turmas.id == idTurma).first()
+    if turma:
+        return turma.to_dict()
+    return {"error": "Turma não encontrada."}, 404
 
-        if any(aluno["id"] == dados.get("id") for aluno in dici["alunos"]):
-            return jsonify({"error": "ID já utilizado"}), 400
+def atualizar_turma(db: Session, idTurma: int, dados: dict):
+    turma = db.query(Turmas).filter(Turmas.id == idTurma).first()
+    if not turma:
+        return {"error": "Turma não encontrada."}, 404
 
-        novo_id = max([aluno["id"] for aluno in dici["alunos"]], default=0) + 1
-        novo_aluno = {
-            "id": novo_id,
-            "nome": dados["nome"],
-            "idade": dados["idade"],
-            "data_nascimento": dados.get("data_nascimento"),
-            "nota_primeiro_semestre": dados.get("nota_primeiro_semestre"),
-            "nota_segundo_semestre": dados.get("nota_segundo_semestre"),
-            "media_final": dados.get("media_final")
-        }
-        dici['alunos'].append(novo_aluno)
+    if not dados.get("nome"):
+        return {"error": "Turma sem nome"}, 400
 
-        return jsonify({"message": "Aluno adicionado com sucesso!", "aluno": novo_aluno}), 201
-    except Exception as e:
-        return jsonify({'error': 'Erro ao adicionar aluno.', 'details': str(e)}), 500
-    
+    turma.nome = dados.get("nome", turma.nome)
+    turma.turno = dados.get("turno", turma.turno)
+    turma.ativo = dados.get("ativo", turma.ativo)
 
-@alunos_bp.route('/filtrar/<int:idAluno>', methods=['GET'])
-def filtrar_aluno(idAluno):
-    aluno = next((aluno for aluno in dici["alunos"] if aluno["id"] == idAluno), None)
-    if aluno:
-        return jsonify(aluno)
-    return jsonify({"error": "Aluno não encontrado"}), 404
+    db.commit()
+    db.refresh(turma)
+    return {"message": "Turma atualizada com sucesso!", "turma": turma.to_dict()}, 200
 
+def deletar_turma(db: Session, idTurma: int):
+    turma = db.query(Turmas).filter(Turmas.id == idTurma).first()
+    if not turma:
+        return {"error": "Turma não encontrada."}, 404
 
-@alunos_bp.route('/atualizar/<int:idAluno>', methods=['PUT'])
-def atualizar_aluno(idAluno):
-    try:
-        alunos = dici["alunos"]
-        for aluno in alunos:
-            if aluno['id'] == idAluno:
-                dados = request.json
-                aluno['nome'] = dados.get("nome", aluno['nome'])
-                aluno['idade'] = dados.get("idade", aluno['idade'])
-                aluno['data_nascimento'] = dados.get("data_nascimento", aluno['data_nascimento'])
-                aluno['nota_primeiro_semestre'] = dados.get("nota_primeiro_semestre", aluno['nota_primeiro_semestre'])
-                aluno['nota_segundo_semestre'] = dados.get("nota_segundo_semestre", aluno['nota_segundo_semestre'])
-                aluno['media_final'] = dados.get("media_final", aluno['media_final'])
-                return jsonify({"message": "Aluno atualizado com sucesso!", "aluno": aluno}), 200
+    db.delete(turma)
+    db.commit()
+    return {"message": "Turma removida com sucesso!"}, 200
 
-        return jsonify({"error": "Aluno não encontrado."}), 404
-    except Exception as e:
-        return jsonify({'error': 'Erro ao atualizar aluno.', 'details': str(e)}), 500
-
-
-@alunos_bp.route('/<int:idAluno>', methods=['DELETE'])
-def deletar_aluno(idAluno):
-    try:
-        alunos = dici["alunos"]
-        for aluno in alunos:
-            if aluno['id'] == idAluno:
-                dici["alunos"].remove(aluno)
-                return jsonify({"message": "Aluno removido com sucesso!"}), 200
-
-        return jsonify({"error": "Aluno não encontrado."}), 404
-    except Exception as e:
-        return jsonify({'error': 'Erro ao deletar aluno.', 'details': str(e)}), 500
-
-@alunos_bp.route('/reseta', methods=['POST', 'DELETE'])
-def resetar_dados():
-    dici["alunos"].clear()
-    return jsonify({"message": "Dados resetados com sucesso!"}), 200
+def resetar_turmas(db: Session):
+    db.query(Turmas).delete()
+    db.commit()
+    return {"message": "Dados das turmas resetados com sucesso!"}, 200
