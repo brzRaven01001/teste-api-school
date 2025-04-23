@@ -1,39 +1,46 @@
-turmas = [
-    {
-        "id": 1,
-        "nome": "Sistemas",
-        "turno": "Matutino",
-        "ativo": True
-    }
-]
+from database import Base
+from database import Turmas
+from sqlalchemy.orm import Session
 
-def listar_turmas():
-    return turmas
+def listar_turmas(db: Session):
+    return db.query(Turmas).all()
 
-def adicionar_turma(nome, turno, ativo):
-    novo_id = max([t["id"] for t in turmas], default=0) + 1
-    nova_turma = {"id": novo_id, "nome": nome, "turno": turno, "ativo": bool(ativo)}
-    turmas.append(nova_turma)
+def adicionar_turma(db: Session, nome: str, turno: str, ativo: bool):
+    nova_turma = Turmas(nome=nome, turno=turno, ativo=ativo)
+    db.add(nova_turma)
+    db.commit()
+    db.refresh(nova_turma)
     return nova_turma
 
-def filtrar_por_id(turma_id):
-    return next((t for t in turmas if t["id"] == turma_id), None)
+def filtrar_por_id(db: Session, turma_id: int):
+    return db.query(Turmas).filter(Turmas.id == turma_id).first()
 
-def atualizar_turma(turma_id, nome=None, turno=None, ativo=None):
-    turma = filtrar_por_id(turma_id)
-    if turma:
-        turma["nome"] = nome if nome is not None else turma["nome"]
-        turma["turno"] = turno if turno is not None else turma["turno"]
-        turma["ativo"] = ativo if ativo is not None else turma["ativo"]
-        return turma
-    return None
+def atualizar_turma(db: Session, turma_id: int, nome=None, turno=None, ativo=None):
+    turma = db.query(Turmas).filter(Turmas.id == turma_id).first()
+    if not turma:
+        return {"error": "Turma não encontrada."}, 404
 
-def deletar_turma(turma_id):
-    turma = filtrar_por_id(turma_id)
-    if turma:
-        turmas.remove(turma)
-        return True
-    return False
+    if nome is not None:
+        turma.nome = nome
+    if turno is not None:
+        turma.turno = turno
+    if ativo is not None:
+        turma.ativo = ativo
 
-def resetar_turmas():
-    turmas.clear()
+    db.commit()
+    db.refresh(turma)
+    return {"message": "Turma atualizada!", "turma": turma}, 200
+
+def deletar_turma(db: Session, turma_id: int):
+    turma = db.query(Turmas).filter(Turmas.id == turma_id).first()
+    if not turma:
+        return {"error": "Turma não encontrada."}, 404
+
+    db.delete(turma)
+    db.commit()
+    return {"message": "Turma removida!"}, 200
+
+def resetar_turmas(db: Session):
+    db.query(Turmas).delete()
+    db.commit()
+    return {"message": "Todas as turmas foram apagadas,!"}, 200
