@@ -1,8 +1,5 @@
 import requests
 import unittest
-from flask import Flask
-from sqlalchemy import true
-from models.alunos import alunos_bp
 
 class AlunosTestCase(unittest.TestCase):
 
@@ -231,7 +228,7 @@ class AlunosTestCase(unittest.TestCase):
 
         r = requests.put('http://127.0.0.1:5000/alunos/atualizar/1',json={'id':1})
         print(f"Resposta ao editar alunos sem nome: {r.status_code} {r.json()}")
-        self.assertEqual(r.status_code,200)
+        self.assertEqual(r.status_code,400)
         self.assertEqual(r.json()['error'],'alunos sem nome')
         
         
@@ -243,5 +240,4 @@ def runTests():
 if __name__ == '__main__':
     runTests()
 
-
-#  python teste_alunos.py
+#  python -m unittest tests/teste_alunos.py

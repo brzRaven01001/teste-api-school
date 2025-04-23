@@ -1,96 +1,69 @@
-from flask import request, jsonify, Blueprint
+from database import db, Professores
+from sqlalchemy.orm import Session
 
-dici = {
-    "professores": [
-        {
-            "id": 1,
-            "nome": "Estevão Ferreira",
-            "idade": 43,
-            "data_nascimento": "01/07/1983",
-            "disciplina": "Sistemas",
-            "salario": 3750.00
-        }
-    ],
-}
+def listar_professores(db: Session):
+    professores = db.query(Professores).all()
+    return [professor.to_dict() for professor in professores]
 
-professor_bp = Blueprint('professor', __name__)
-
-
-@professor_bp.route('/listar', methods=['GET'])
-def listar_professores():
-    return jsonify(dici["professores"])
-
-
-@professor_bp.route('/filtrar/<int:idProfessor>', methods=['GET'])
-def get_professor_by_id(idProfessor):
-    professor = next((prof for prof in dici["professores"] if prof["id"] == idProfessor), None)
-    
+def get_professor_by_id(db: Session, idProfessor: int):
+    professor = db.query(Professores).filter(Professores.id == idProfessor).first()
     if professor:
-        return jsonify(professor)
-    return jsonify({"error": "Professor não encontrado"}), 404
+        return professor.to_dict()
+    return {"error": "Professor não encontrado"}, 404
 
+def criar_professor(db: Session, dados: dict):
+    if not dados.get("nome"):
+        return {"error": "Nome é obrigatório."}, 400
 
-@professor_bp.route('/criar', methods=['POST'])
-def criar_professor():
-    try:
-        dados = request.json
+    professor_existente = db.query(Professores).filter(Professores.id == dados.get("id")).first()
+    if professor_existente:
+        return {"error": "ID já utilizado."}, 400
 
-        if not dados.get("nome"):
-            return jsonify({"error": "Nome é obrigatório."}), 400
+    novo_professor = Professores(
+        id=dados.get("id"),
+        nome=dados["nome"],
+        idade=dados.get("idade"),
+        data_nascimento=dados.get("data_nascimento"),
+        disciplina=dados.get("disciplina"),
+        salario=dados.get("salario")
+    )
 
-        if "id" in dados and any(prof["id"] == dados["id"] for prof in dici["professores"]):
-            return jsonify({"error": "ID já utilizado."}), 400
+    db.add(novo_professor)
+    db.commit()
+    db.refresh(novo_professor)
 
-        novo_id = max([prof["id"] for prof in dici["professores"]], default=0) + 1
+    return {"message": "Professor cadastrado com sucesso!", "professor": novo_professor.to_dict()}, 201
 
-        novo_professor = {
-            "id": dados.get("id", novo_id),
-            "nome": dados["nome"],
-            "idade": dados.get("idade"),
-            "data_nascimento": dados.get("data_nascimento"),
-            "disciplina": dados.get("disciplina"),
-            "salario": dados.get("salario")
-        }
+def atualizar_professor(db: Session, idProfessor: int, dados: dict):
+    professor = db.query(Professores).filter(Professores.id == idProfessor).first()
+    if not professor:
+        return {"error": "Professor não encontrado."}, 404
 
-        dici["professores"].append(novo_professor)
+    if "nome" not in dados or not dados["nome"]:
+        return {"error": "Professor sem nome"}, 400
 
-        return jsonify({"message": "Professor adicionado com sucesso!", "professor": novo_professor}), 201
-    except Exception as e:
-        return jsonify({'error': 'Erro ao adicionar professor.', 'details': str(e)}), 500
+    professor.nome = dados.get("nome", professor.nome)
+    professor.idade = dados.get("idade", professor.idade)
+    professor.data_nascimento = dados.get("data_nascimento", professor.data_nascimento)
+    professor.disciplina = dados.get("disciplina", professor.disciplina)
+    professor.salario = dados.get("salario", professor.salario)
 
+    db.commit()
+    db.refresh(professor)
 
+    return {"message": "Professor atualizado com sucesso!", "professor": professor.to_dict()}, 200
 
-@professor_bp.route("/atualizar/<int:idProfessor>", methods=['PUT'])
-def atualizar_professor(idProfessor):
-    professor = next((prof for prof in dici["professores"] if prof["id"] == idProfessor), None)
-    
-    if professor:
-        try:
-            dados = request.json
-            professor['nome'] = dados.get("nome", professor['nome'])
-            professor['idade'] = dados.get("idade", professor['idade'])
-            professor['data_nascimento'] = dados.get("data_nascimento", professor['data_nascimento'])
-            professor['disciplina'] = dados.get("disciplina", professor['disciplina'])
-            professor['salario'] = dados.get("salario", professor['salario'])
-            
-            return jsonify({"message": "Professor atualizado com sucesso!", "professor": professor}), 200
-        except Exception as e:
-            return jsonify({'error': 'Erro ao atualizar professor.', 'details': str(e)}), 500
+def deletar_professor(db: Session, idProfessor: int):
+    professor = db.query(Professores).filter(Professores.id == idProfessor).first()
+    if not professor:
+        return {"error": "Professor não encontrado."}, 404
 
-    return jsonify({"error": "Professor não encontrado."}), 404
+    db.delete(professor)
+    db.commit()
 
+    return {"message": "Professor removido com sucesso!"}, 200
 
-@professor_bp.route("/<int:idProfessor>", methods=['DELETE'])
-def deletar_professor(idProfessor):
-    professor = next((prof for prof in dici["professores"] if prof["id"] == idProfessor), None)
-    
-    if professor:
-        dici["professores"].remove(professor)
-        return jsonify({"message": "Professor removido com sucesso!"}), 200
-    
-    return jsonify({"error": "Professor não encontrado."}), 404
-
-@professor_bp.route('/reseta', methods=['POST', 'DELETE'])
-def resetar_dados():
-    dici["professores"].clear()
-    return jsonify({"message": "Dados resetados com sucesso!"}), 200
+def resetar_dados(db: Session):
+    db.query(Professores).delete()
+    db.commit()
+    return {"message": "Dados resetados com sucesso!"}, 200
