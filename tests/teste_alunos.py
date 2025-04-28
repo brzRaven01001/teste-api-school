@@ -239,3 +239,5 @@ def runTests():
 
 if __name__ == '__main__':
     runTests()
+
+#  python -m unittest tests/teste_alunos.py

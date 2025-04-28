@@ -1,11 +1,16 @@
-from flask import request, jsonify, Blueprint
+from flask import Blueprint, jsonify, request
 from models import turmas
+from database import db
 
 turmas_bp = Blueprint('turmas', __name__)
 
 @turmas_bp.route('/listar', methods=['GET'])
 def listar_turmas():
-    return jsonify(turmas.listar_turmas())
+    try:
+        turmas_listadas = turmas.listar_turmas(db.session)
+        return jsonify(turmas_listadas), 200
+    except Exception as e:
+        return jsonify({'error': 'Erro ao listar turmas.', 'details': str(e)}), 500
 
 @turmas_bp.route('/criar', methods=['POST'])
 def criar_turma():
@@ -19,21 +24,20 @@ def criar_turma():
         if "ativo" not in data:
             return jsonify({'error': 'Campo "ativo" obrigatório'}), 400
 
-        nova_turma = turmas.adicionar_turma(
-            nome=data["nome"],
-            turno=data["turno"],
-            ativo=data["ativo"]
-        )
-        return jsonify({'message': 'Turma adicionada com sucesso!', "turma": nova_turma}), 201
+        nova_turma, status = turmas.adicionar_turma(db.session, data)
+        return jsonify(nova_turma), status
     except Exception as e:
         return jsonify({'error': 'Erro ao adicionar turma.', 'details': str(e)}), 500
 
 @turmas_bp.route('/filtrar/<int:idTurma>', methods=['GET'])
 def filtrar_turma(idTurma):
-    turma = turmas.filtrar_por_id(idTurma)
-    if turma:
-        return jsonify(turma)
-    return jsonify({"error": "Turma não encontrada"}), 404
+    try:
+        turma = turmas.filtrar_por_id(db.session, idTurma)
+        if turma:
+            return jsonify(turma), 200
+        return jsonify({"error": "Turma não encontrada"}), 404
+    except Exception as e:
+        return jsonify({'error': 'Erro ao filtrar turma.', 'details': str(e)}), 500
 
 @turmas_bp.route('/atualizar/<int:idTurma>', methods=['PUT'])
 def atualizar_turma(idTurma):
@@ -41,16 +45,11 @@ def atualizar_turma(idTurma):
         data = request.json
 
         if not data.get('nome'):
-            return jsonify({'erro': 'turmas sem nome'}), 400
+            return jsonify({'error': 'Turma sem nome'}), 400
 
-        turma_atualizada = turmas.atualizar_turma(
-            idTurma,
-            nome=data.get('nome'),
-            turno=data.get('turno'),
-            ativo=data.get('ativo')
-        )
+        turma_atualizada, status = turmas.atualizar_turma(db.session, idTurma, data)
         if turma_atualizada:
-            return jsonify({'message': 'Turma atualizada com sucesso!'}), 200
+            return jsonify(turma_atualizada), status
         return jsonify({'error': 'Turma não encontrada.'}), 404
     except Exception as e:
         return jsonify({'error': 'Erro ao atualizar turma.', 'details': str(e)}), 500
@@ -58,13 +57,15 @@ def atualizar_turma(idTurma):
 @turmas_bp.route('/<int:turma_id>', methods=['DELETE'])
 def deletar_turma(turma_id):
     try:
-        if turmas.deletar_turma(turma_id):
-            return jsonify({'message': 'Turma deletada com sucesso!'}), 200
-        return jsonify({'error': 'Turma não encontrada.'}), 404
+        result, status = turmas.deletar_turma(db.session, turma_id)
+        return jsonify(result), status
     except Exception as e:
         return jsonify({'error': 'Erro ao deletar turma.', 'details': str(e)}), 500
 
 @turmas_bp.route('/reseta', methods=['POST', 'DELETE'])
 def resetar_dados():
-    turmas.resetar_turmas()
-    return jsonify({"message": "Dados resetados com sucesso!"}), 200
+    try:
+        result, status = turmas.resetar_turmas(db.session)
+        return jsonify(result), status
+    except Exception as e:
+        return jsonify({'error': 'Erro ao resetar dados.', 'details': str(e)}), 500

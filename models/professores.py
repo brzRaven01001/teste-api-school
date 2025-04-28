@@ -1,13 +1,14 @@
+from database import db, Professores
 from sqlalchemy.orm import Session
-from database import Professores
 
 def listar_professores(db: Session):
-    return db.query(Professores).all()
+    professores = db.query(Professores).all()
+    return [professor.to_dict() for professor in professores]
 
 def get_professor_by_id(db: Session, idProfessor: int):
     professor = db.query(Professores).filter(Professores.id == idProfessor).first()
     if professor:
-        return professor
+        return professor.to_dict()
     return {"error": "Professor não encontrado"}, 404
 
 def criar_professor(db: Session, dados: dict):
@@ -31,7 +32,7 @@ def criar_professor(db: Session, dados: dict):
     db.commit()
     db.refresh(novo_professor)
 
-    return {"message": "Professor cadastrado!", "professor": novo_professor}, 201
+    return {"message": "Professor cadastrado com sucesso!", "professor": novo_professor.to_dict()}, 201
 
 def atualizar_professor(db: Session, idProfessor: int, dados: dict):
     professor = db.query(Professores).filter(Professores.id == idProfessor).first()
@@ -50,7 +51,7 @@ def atualizar_professor(db: Session, idProfessor: int, dados: dict):
     db.commit()
     db.refresh(professor)
 
-    return {"message": "Professor atualizado!", "professor": professor}, 200
+    return {"message": "Professor atualizado com sucesso!", "professor": professor.to_dict()}, 200
 
 def deletar_professor(db: Session, idProfessor: int):
     professor = db.query(Professores).filter(Professores.id == idProfessor).first()
@@ -60,9 +61,9 @@ def deletar_professor(db: Session, idProfessor: int):
     db.delete(professor)
     db.commit()
 
-    return {"message": "Professor removido!"}, 200
+    return {"message": "Professor removido com sucesso!"}, 200
 
 def resetar_dados(db: Session):
     db.query(Professores).delete()
     db.commit()
-    return {"message": "Dados resetados!"}, 200
+    return {"message": "Dados resetados com sucesso!"}, 200
