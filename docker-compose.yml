@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    container_name: api-flask
+    ports:
+      - "8000:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@db:5432/school_db
+
+  db:
+    image: postgres:13
+    container_name: postgres-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=school_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"  # Mudando de "5000:5000" para "5432:5432"
+
+volumes:
+  postgres_data:
