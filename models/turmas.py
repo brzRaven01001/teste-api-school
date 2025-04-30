@@ -23,7 +23,7 @@ def adicionar_turma(db: Session, dados: dict):
 def filtrar_por_id(db: Session, idTurma: int):
     turma = db.query(Turma).filter(Turma.id == idTurma).first()
     if turma:
-        return turma.to_dict()
+        return turma.to_dict_completo()
     return {"error": "Turma não encontrada."}, 404
 
 def atualizar_turma(db: Session, idTurma: int, dados: dict):

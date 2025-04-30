@@ -26,8 +26,8 @@ def adicionar_aluno(db: Session, dados: dict):
 def filtrar_por_id(db: Session, idAluno: int):
     aluno = db.query(Aluno).filter(Aluno.id == idAluno).first()
     if aluno:
-        return aluno.to_dict()
-    return {"error": "Aluno não encontrado"}, 404
+        return aluno.to_dict_completo()
+    return {"error": "Aluno não encontrado"}
 
 def atualizar_aluno(db: Session, idAluno: int, dados: dict):
     aluno = db.query(Aluno).filter(Aluno.id == idAluno).first()
@@ -40,6 +40,8 @@ def atualizar_aluno(db: Session, idAluno: int, dados: dict):
     aluno.nota_primeiro_semestre = dados.get("nota_primeiro_semestre", aluno.nota_primeiro_semestre)
     aluno.nota_segundo_semestre = dados.get("nota_segundo_semestre", aluno.nota_segundo_semestre)
     aluno.media_final = dados.get("media_final", aluno.media_final)
+    aluno.turma_id = dados.get("turma_id", aluno.turma_id)
+
 
     db.commit()
     db.refresh(aluno)

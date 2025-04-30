@@ -21,12 +21,31 @@ class Aluno(db.Model):
         return {
             "id": self.id,
             "nome": self.nome,
+            "data_nascimento": self.data_nascimento,
+            "nota_primeiro_semestre": self.nota_primeiro_semestre,
+            "nota_segundo_semestre": self.nota_segundo_semestre,
+            "turma_id": self.turma_id
+        }
+    
+    def to_dict_completo(self):
+        return {
+            "id": self.id,
+            "nome": self.nome,
             "idade": self.idade,
             "data_nascimento": self.data_nascimento,
             "nota_primeiro_semestre": self.nota_primeiro_semestre,
             "nota_segundo_semestre": self.nota_segundo_semestre,
             "media_final": self.media_final,
-            "turma_id": self.turma_id
+            "turma": {
+                "id": self.turma.id if self.turma else None,
+                "nome": self.turma.nome if self.turma else None,
+                "turno": self.turma.turno if self.turma else None,
+                "ativo": self.turma.ativo if self.turma else None,
+                "professor": {
+                    "id": self.turma.professor.id,
+                    "nome": self.turma.professor.nome
+                } if self.turma and self.turma.professor else None
+            } if self.turma else None
         }
 
 class Professor(db.Model):
@@ -45,10 +64,25 @@ class Professor(db.Model):
             "id": self.id,
             "nome": self.nome,
             "idade": self.idade,
+            "disciplina": self.disciplina,
+            "salario": self.salario,
+        }
+
+    def to_dict_completo(self):
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "idade": self.idade,
             "data_nascimento": self.data_nascimento,
             "disciplina": self.disciplina,
             "salario": self.salario,
-            "turmas": [turma.id for turma in self.turmas]
+            "turmas": [{
+                "id": turma.id,
+                "nome": turma.nome,
+                "turno": turma.turno,
+                "ativo": turma.ativo
+            }
+            for turma in self.turmas]
         }
 
 class Turma(db.Model):
@@ -69,6 +103,15 @@ class Turma(db.Model):
             "nome": self.nome,
             "turno": self.turno,
             "ativo": self.ativo,
+            "professor_id": self.professor_id
+        }
+    
+    def to_dict_completo(self):
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "turno": self.turno,
+            "ativo": self.ativo,
             "professor_id": self.professor_id,
-            "alunos": [aluno.id for aluno in self.alunos]
+            "alunos": [{"id": aluno.id, "nome": aluno.nome} for aluno in self.alunos]
         }

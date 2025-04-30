@@ -1,4 +1,4 @@
-from database import db, Professor
+from database import db, Professor, Turma
 from sqlalchemy.orm import Session
 
 def listar_professores(db: Session):
@@ -8,16 +8,17 @@ def listar_professores(db: Session):
 def get_professor_by_id(db: Session, idProfessor: int):
     professor = db.query(Professor).filter(Professor.id == idProfessor).first()
     if professor:
-        return professor.to_dict()
+        return professor.to_dict_completo()
     return {"error": "Professor não encontrado"}, 404
 
 def criar_professor(db: Session, dados: dict):
     if not dados.get("nome"):
         return {"error": "Nome é obrigatório."}, 400
 
-    professor_existente = db.query(Professor).filter(Professor.id == dados.get("id")).first()
-    if professor_existente:
-        return {"error": "ID já utilizado."}, 400
+    if dados.get("id"):
+        professor_existente = db.query(Professor).filter(Professor.id == dados.get("id")).first()
+        if professor_existente:
+            return {"error": "ID já utilizado."}, 400
 
     novo_professor = Professor(
         id=dados.get("id"),
@@ -28,11 +29,21 @@ def criar_professor(db: Session, dados: dict):
         salario=dados.get("salario")
     )
 
+    turma_ids = dados.get("turma_ids")
+    if turma_ids:
+        turmas = db.query(Turma).filter(Turma.id.in_(turma_ids)).all()
+        if len(turmas) != len(turma_ids):
+            return {"error": "Uma ou mais turmas não encontradas."}, 400
+        novo_professor.turmas = turmas
+
     db.add(novo_professor)
     db.commit()
     db.refresh(novo_professor)
 
-    return {"message": "Professor cadastrado com sucesso!", "professor": novo_professor.to_dict()}, 201
+    return {
+        "message": "Professor cadastrado com sucesso!",
+        "professor": novo_professor.to_dict()
+    }, 201
 
 def atualizar_professor(db: Session, idProfessor: int, dados: dict):
     professor = db.query(Professor).filter(Professor.id == idProfessor).first()

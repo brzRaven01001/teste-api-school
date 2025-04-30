@@ -16,7 +16,7 @@ def criar_aluno():
 
 @alunos_bp.route('/filtrar/<int:idAluno>', methods=['GET'])
 def filtrar_aluno(idAluno):
-    result = alunos.buscar_aluno(db.session, idAluno)
+    result = alunos.filtrar_por_id(db.session, idAluno)
     status = 200 if "error" not in result else 404
     return jsonify(result), status
 
