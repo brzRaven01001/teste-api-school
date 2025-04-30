@@ -1,57 +1,60 @@
-from database import db, Turmas
+from database import db, Aluno
 from sqlalchemy.orm import Session
 
-def listar_turmas(db: Session):
-    turmas = db.query(Turmas).all()
-    return [turma.to_dict() for turma in turmas]
+def listar_alunos(db: Session):
+    alunos = db.query(Aluno).all()
+    return [aluno.to_dict() for aluno in alunos]
 
-def adicionar_turma(db: Session, dados: dict):
-    if not dados.get("nome") or not dados.get("turno"):
-        return {"error": "Nome e turno são obrigatórios."}, 400
+def adicionar_aluno(db: Session, dados: dict):
+    if not dados.get("nome") or not dados.get("idade"):
+        return {"error": "Nome e idade são obrigatórios."}, 400
 
-    nova_turma = Turmas(
+    novo_aluno = Aluno(
         nome=dados["nome"],
-        turno=dados["turno"],
-        ativo=bool(dados.get("ativo", True))
+        idade=dados["idade"],
+        data_nascimento=dados.get("data_nascimento"),
+        nota_primeiro_semestre=dados.get("nota_primeiro_semestre"),
+        nota_segundo_semestre=dados.get("nota_segundo_semestre"),
+        media_final=dados.get("media_final")
     )
 
-    db.add(nova_turma)
+    db.add(novo_aluno)
     db.commit()
-    db.refresh(nova_turma)
-    return {"message": "Turma criada com sucesso!", "turma": nova_turma.to_dict()}, 201
+    db.refresh(novo_aluno)
+    return {"message": "Aluno adicionado com sucesso!", "aluno": novo_aluno.to_dict()}, 201
 
-def filtrar_por_id(db: Session, idTurma: int):
-    turma = db.query(Turmas).filter(Turmas.id == idTurma).first()
-    if turma:
-        return turma.to_dict()
-    return {"error": "Turma não encontrada."}, 404
+def filtrar_por_id(db: Session, idAluno: int):
+    aluno = db.query(Aluno).filter(Aluno.id == idAluno).first()
+    if aluno:
+        return aluno.to_dict()
+    return {"error": "Aluno não encontrado"}, 404
 
-def atualizar_turma(db: Session, idTurma: int, dados: dict):
-    turma = db.query(Turmas).filter(Turmas.id == idTurma).first()
-    if not turma:
-        return {"error": "Turma não encontrada."}, 404
+def atualizar_aluno(db: Session, idAluno: int, dados: dict):
+    aluno = db.query(Aluno).filter(Aluno.id == idAluno).first()
+    if not aluno:
+        return {"error": "Aluno não encontrado"}, 404
 
-    if not dados.get("nome"):
-        return {"error": "Turma sem nome"}, 400
-
-    turma.nome = dados.get("nome", turma.nome)
-    turma.turno = dados.get("turno", turma.turno)
-    turma.ativo = dados.get("ativo", turma.ativo)
+    aluno.nome = dados.get("nome", aluno.nome)
+    aluno.idade = dados.get("idade", aluno.idade)
+    aluno.data_nascimento = dados.get("data_nascimento", aluno.data_nascimento)
+    aluno.nota_primeiro_semestre = dados.get("nota_primeiro_semestre", aluno.nota_primeiro_semestre)
+    aluno.nota_segundo_semestre = dados.get("nota_segundo_semestre", aluno.nota_segundo_semestre)
+    aluno.media_final = dados.get("media_final", aluno.media_final)
 
     db.commit()
-    db.refresh(turma)
-    return {"message": "Turma atualizada com sucesso!", "turma": turma.to_dict()}, 200
+    db.refresh(aluno)
+    return {"message": "Aluno atualizado com sucesso!", "aluno": aluno.to_dict()}, 200
 
-def deletar_turma(db: Session, idTurma: int):
-    turma = db.query(Turmas).filter(Turmas.id == idTurma).first()
-    if not turma:
-        return {"error": "Turma não encontrada."}, 404
+def deletar_aluno(db: Session, idAluno: int):
+    aluno = db.query(Aluno).filter(Aluno.id == idAluno).first()
+    if not aluno:
+        return {"error": "Aluno não encontrado"}, 404
 
-    db.delete(turma)
+    db.delete(aluno)
     db.commit()
-    return {"message": "Turma removida com sucesso!"}, 200
+    return {"message": "Aluno removido com sucesso!"}, 200
 
-def resetar_turmas(db: Session):
-    db.query(Turmas).delete()
+def resetar_alunos(db: Session):
+    db.query(Aluno).delete()
     db.commit()
-    return {"message": "Dados das turmas resetados com sucesso!"}, 200
+    return {"message": "Dados dos alunos resetados com sucesso!"}, 200
