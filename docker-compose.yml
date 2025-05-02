@@ -11,19 +11,17 @@ services:
     environment:
       - FLASK_APP=app.py
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://postgres:password@db:5432/school_db
+      - DATABASE_URL=mysql+pymysql://root:password@db:3306/school_db
 
   db:
-    image: postgres:13
-    container_name: postgres-db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
     environment:
-      - POSTGRES_DB=school_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - MYSQL_DATABASE=school_db
+      - MYSQL_ROOT_PASSWORD=password
     ports:
-      - "5432:5432"  # Mudando de "5000:5000" para "5432:5432"
+      - "3306:3306"
 
 volumes:
-  postgres_data:
+  mysql_data:
