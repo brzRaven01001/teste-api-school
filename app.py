@@ -17,7 +17,7 @@ def create_app():
 
     @app.route('/')
     def home():
-        return redirect(url_for('professores_bp.listar_professores'))
+       return redirect(url_for('alunos.listar_alunos'))
 
     with app.app_context():
         db.create_all()
