@@ -1,4 +1,4 @@
-from database import db, Turma
+from database import db, Turma, Professor
 from sqlalchemy.orm import Session
 
 def listar_turmas(db: Session):
@@ -9,10 +9,19 @@ def adicionar_turma(db: Session, dados: dict):
     if not dados.get("nome") or not dados.get("turno"):
         return {"error": "Nome e turno são obrigatórios."}, 400
 
+    professor_id = dados.get("professor_id")
+    if professor_id:
+        professor = db.query(Professor).filter_by(id=professor_id).first()
+        if not professor:
+            return {"error": "Professor não encontrado."}, 400
+    else:
+        return {"error": "Professor é obrigatório."}, 400
+
     nova_turma = Turma(
         nome=dados["nome"],
         turno=dados["turno"],
-        ativo=bool(dados.get("ativo", True))
+        ativo=bool(dados.get("ativo", True)),
+        professor_id=professor_id
     )
 
     db.add(nova_turma)
@@ -37,6 +46,13 @@ def atualizar_turma(db: Session, idTurma: int, dados: dict):
     turma.nome = dados.get("nome", turma.nome)
     turma.turno = dados.get("turno", turma.turno)
     turma.ativo = dados.get("ativo", turma.ativo)
+
+    professor_id = dados.get("professor_id")
+    if professor_id:
+        professor = db.query(Professor).filter_by(id=professor_id).first()
+        if not professor:
+            return {"error": "Professor não encontrado."}, 400
+        turma.professor_id = professor_id
 
     db.commit()
     db.refresh(turma)

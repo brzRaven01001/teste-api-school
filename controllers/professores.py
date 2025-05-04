@@ -1,37 +1,106 @@
-from flask import Blueprint, jsonify, request
+from flask_restx import Namespace, Resource, fields
+from flask import request
 from models import professores
 from database import db
 
-professores_bp = Blueprint('professores', __name__)
+# Definindo o namespace para 'professores'
+professores_bp = Namespace('professores', description='Operações relacionadas a professores')
 
-@professores_bp.route('/listar', methods=['GET'])
-def listar_professores():
-    return jsonify(professores.listar_professores(db.session))
+# Modelo de entrada (input)
+professor_model = professores_bp.model('ProfessorInput', {
+    'id': fields.Integer(readonly=True, description='ID do professor'),
+    'nome': fields.String(required=True, description='Nome do professor'),
+    'idade': fields.Integer(description='Idade do professor'),
+    'data_nascimento': fields.String(description='Data de nascimento do professor'),
+    'disciplina': fields.String(description='Disciplina do professor'),
+    'salario': fields.Float(description='Salário do professor')
+})
 
-@professores_bp.route('/filtrar/<int:idProfessor>', methods=['GET'])
-def get_professor_by_id(idProfessor):
-    result = professores.get_professor_by_id(db.session, idProfessor)
-    status = 200 if "error" not in result else 404
-    return jsonify(result), status
+# Modelo de saída (output)
+professor_output = professores_bp.model('ProfessorOutput', {
+    'id': fields.Integer(readonly=True, description='ID do professor'),
+    'nome': fields.String(description='Nome do professor'),
+    'idade': fields.Integer(description='Idade do professor'),
+    'data_nascimento': fields.String(description='Data de nascimento do professor'),
+    'disciplina': fields.String(description='Disciplina do professor'),
+    'salario': fields.Float(description='Salário do professor'),
+    'turmas': fields.List(fields.Nested(professores_bp.model('Turma', {
+        'id': fields.Integer(description='ID da turma'),
+        'nome': fields.String(description='Nome da turma'),
+        'turno': fields.String(description='Turno da turma'),
+        'ativo': fields.Boolean(description='Status da turma')
+    })))
+})
 
-@professores_bp.route('/criar', methods=['POST'])
-def criar_professor():
-    dados = request.json
-    result, status = professores.criar_professor(db.session, dados)
-    return jsonify(result), status
+# Endpoint para listar os professores
+@professores_bp.route('/listar')
+class ListarProfessores(Resource):
+    def get(self):
+        """
+        Lista todos os professores cadastrados
+        """
+        return professores.listar_professores(db.session), 200
 
-@professores_bp.route('/atualizar/<int:idProfessor>', methods=['PUT'])
-def atualizar_professor(idProfessor):
-    dados = request.json
-    result, status = professores.atualizar_professor(db.session, idProfessor, dados)
-    return jsonify(result), status
+# Endpoint para filtrar professor por ID
+@professores_bp.route('/filtrar/<int:idProfessor>')
+class FiltrarProfessor(Resource):
+    @professores_bp.marshal_with(professor_output)
+    def get(self, idProfessor):
+        """
+        Filtra um professor pelo ID
+        """
+        result = professores.get_professor_by_id(db.session, idProfessor)
+        if isinstance(result, tuple):
+            return result
+        return result
 
-@professores_bp.route('/<int:idProfessor>', methods=['DELETE'])
-def deletar_professor(idProfessor):
-    result, status = professores.deletar_professor(db.session, idProfessor)
-    return jsonify(result), status
+# Endpoint para criar um professor
+@professores_bp.route('/criar')
+class CriarProfessor(Resource):
+    @professores_bp.expect(professor_model)
+    def post(self):
+        """
+        Cria um novo professor
+        """
+        dados = request.json
+        result, status = professores.criar_professor(db.session, dados)
+        return result, status
 
+# Endpoint para atualizar os dados de um professor
+@professores_bp.route('/atualizar/<int:idProfessor>')
+class AtualizarProfessor(Resource):
+    @professores_bp.expect(professor_model)
+    def put(self, idProfessor):
+        """
+        Atualiza os dados de um professor
+        """
+        dados = request.json
+        result, status = professores.atualizar_professor(db.session, idProfessor, dados)
+        return result, status
+
+# Endpoint para deletar um professor
+@professores_bp.route('/<int:idProfessor>')
+class DeletarProfessor(Resource):
+    def delete(self, idProfessor):
+        """
+        Deleta um professor pelo ID
+        """
+        result, status = professores.deletar_professor(db.session, idProfessor)
+        return result, status
+
+# Endpoint para resetar os dados dos professores
 @professores_bp.route('/reseta', methods=['POST', 'DELETE'])
-def resetar_dados():
-    result, status = professores.resetar_dados(db.session)
-    return jsonify(result), status
+class ResetarProfessores(Resource):
+    def post(self):
+        """
+        Reseta os dados dos professores
+        """
+        result, status = professores.resetar_dados(db.session)
+        return result, status
+
+    def delete(self):
+        """
+        Reseta os dados dos professores
+        """
+        result, status = professores.resetar_dados(db.session)
+        return result, status

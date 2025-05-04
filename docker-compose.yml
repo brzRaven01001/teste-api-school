@@ -3,7 +3,7 @@ services:
     build: .
     container_name: api-flask
     ports:
-      - "8000:5000"
+      - "8000:8000"
     volumes:
       - .:/app
     depends_on:
