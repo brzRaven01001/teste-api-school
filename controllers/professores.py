@@ -3,10 +3,10 @@ from flask import request
 from models import professores
 from database import db
 
-# Definindo o namespace para 'professores'
+
 professores_bp = Namespace('professores', description='Operações relacionadas a professores')
 
-# Modelo de entrada (input)
+
 professor_model = professores_bp.model('ProfessorInput', {
     'id': fields.Integer(readonly=True, description='ID do professor'),
     'nome': fields.String(required=True, description='Nome do professor'),
@@ -16,7 +16,7 @@ professor_model = professores_bp.model('ProfessorInput', {
     'salario': fields.Float(description='Salário do professor')
 })
 
-# Modelo de saída (output)
+
 professor_output = professores_bp.model('ProfessorOutput', {
     'id': fields.Integer(readonly=True, description='ID do professor'),
     'nome': fields.String(description='Nome do professor'),
@@ -32,7 +32,6 @@ professor_output = professores_bp.model('ProfessorOutput', {
     })))
 })
 
-# Endpoint para listar os professores
 @professores_bp.route('/listar')
 class ListarProfessores(Resource):
     def get(self):
@@ -41,7 +40,6 @@ class ListarProfessores(Resource):
         """
         return professores.listar_professores(db.session), 200
 
-# Endpoint para filtrar professor por ID
 @professores_bp.route('/filtrar/<int:idProfessor>')
 class FiltrarProfessor(Resource):
     @professores_bp.marshal_with(professor_output)
@@ -54,7 +52,6 @@ class FiltrarProfessor(Resource):
             return result
         return result
 
-# Endpoint para criar um professor
 @professores_bp.route('/criar')
 class CriarProfessor(Resource):
     @professores_bp.expect(professor_model)
@@ -66,7 +63,6 @@ class CriarProfessor(Resource):
         result, status = professores.criar_professor(db.session, dados)
         return result, status
 
-# Endpoint para atualizar os dados de um professor
 @professores_bp.route('/atualizar/<int:idProfessor>')
 class AtualizarProfessor(Resource):
     @professores_bp.expect(professor_model)
@@ -78,7 +74,6 @@ class AtualizarProfessor(Resource):
         result, status = professores.atualizar_professor(db.session, idProfessor, dados)
         return result, status
 
-# Endpoint para deletar um professor
 @professores_bp.route('/<int:idProfessor>')
 class DeletarProfessor(Resource):
     def delete(self, idProfessor):
@@ -88,7 +83,6 @@ class DeletarProfessor(Resource):
         result, status = professores.deletar_professor(db.session, idProfessor)
         return result, status
 
-# Endpoint para resetar os dados dos professores
 @professores_bp.route('/reseta', methods=['POST', 'DELETE'])
 class ResetarProfessores(Resource):
     def post(self):
