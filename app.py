@@ -5,11 +5,16 @@ from controllers.alunos import alunos_bp
 from controllers.turmas import turmas_bp
 from controllers.professores import professores_bp
 
+
+from flasgger import Swagger
+
 def create_app():
     app = Flask(__name__, template_folder='templates')
     app.config.from_object(Config)
 
     db.init_app(app)
+
+    swagger= Swagger(app)
 
     app.register_blueprint(professores_bp, url_prefix='/professor')
     app.register_blueprint(alunos_bp, url_prefix='/alunos')

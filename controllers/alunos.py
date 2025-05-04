@@ -2,7 +2,31 @@ from flask import Blueprint, jsonify, request
 from models import alunos
 from database import db
 
+from flasgger import swag_from
+
 alunos_bp = Blueprint('alunos', __name__)
+
+@alunos_bp.route('/', methods=['GET'])
+@swag_from({
+    'responses': {
+        200: {
+            'description': 'Lista todos os alunos',
+            'examples': {
+                'application/json': [
+                    {
+                        "id": 1,
+                        "nome": "João",
+                        "idade": 15,
+                        "data_nascimento": "2008-02-01",
+                        "nota_primeiro_semestre": 7.5,
+                        "nota_segundo_semestre": 8.0,
+                        "media_final": 7.75
+                    }
+                ]
+            }
+        }
+    }
+})
 
 @alunos_bp.route('/listar', methods=['GET'])
 def listar_alunos():
