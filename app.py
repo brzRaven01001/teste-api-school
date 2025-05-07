@@ -1,7 +1,8 @@
 from flask import Flask, redirect, url_for
-from flask_restx import Api
 from config import Config
-from database import db
+from models.alunos import db
+from models.turmas import db
+from models.professores import db
 from controllers.alunos import alunos_bp
 from controllers.turmas import turmas_bp
 from controllers.professores import professores_bp
@@ -12,20 +13,19 @@ def create_app():
 
     db.init_app(app)
 
-    api = Api(app, version='1.0', title='API School System', description='Uma API com Flask e Flask-RESTX')
-
-    api.add_namespace(professores_bp, path='/professor')
-    api.add_namespace(alunos_bp, path='/alunos')
-    api.add_namespace(turmas_bp, path='/turmas')
+    app.register_blueprint(professores_bp, url_prefix='/professor')
+    app.register_blueprint(alunos_bp, url_prefix='/alunos')
+    app.register_blueprint(turmas_bp, url_prefix='/turmas')
 
     @app.route('/')
     def home():
-       return redirect(url_for('alunos.listar_alunos'))
-    
+        return redirect(url_for('login_bp.login'))
+
     with app.app_context():
         db.create_all()
+
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host=app.config["HOST"], port=app.config["PORT"], debug=app.config["DEBUG"])

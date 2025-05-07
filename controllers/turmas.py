@@ -1,90 +1,71 @@
-from flask_restx import Namespace, Resource, fields
-from flask import request
-from models import turmas
-from database import db
-from controllers.professores import professor_output
+from flask import Blueprint, jsonify, request
+from repository import turmas
+from models.turmas import db
 
-turmas_bp = Namespace('turmas', description='Operações relacionadas a turmas')
+turmas_bp = Blueprint('turmas', __name__)
 
-turma_model = turmas_bp.model('Turma', {
-    'id': fields.Integer(readonly=True, description='ID da turma'),
-    'nome': fields.String(required=True, description='Nome da turma'),
-    'turno': fields.String(required=True, description='Turno da turma'),
-    'ativo': fields.Boolean(description='Status de ativação da turma'),
-    'professor_id': fields.Integer(required=True, description='ID do professor responsável')
-})
+@turmas_bp.route('/listar', methods=['GET'])
+def listar_turmas():
+    try:
+        turmas_listadas = turmas.listar_turmas(db.session)
+        return jsonify(turmas_listadas), 200
+    except Exception as e:
+        return jsonify({'error': 'Erro ao listar turmas.', 'details': str(e)}), 500
 
-turma_output = turmas_bp.model('TurmaOutput', {
-    'id': fields.Integer(readonly=True, description='ID da turma'),
-    'nome': fields.String(description='Nome da turma'),
-    'turno': fields.String(description='Turno da turma'),
-    'ativo': fields.Boolean(description='Status de ativação da turma'),
-    'aluno': fields.Nested({
-        'id': fields.Integer(description='ID do aluno'),
-        'nome': fields.String(description='Nome do aluno')
-    })
-})
+@turmas_bp.route('/criar', methods=['POST'])
+def criar_turma():
+    try:
+        data = request.json
 
-@turmas_bp.route('/listar')
-class ListarTurmas(Resource):
-    def get(self):
-        """
-        Lista todas as turmas cadastradas
-        """
-        return turmas.listar_turmas(db.session), 200
+        if not data.get("nome"):
+            return jsonify({'error': 'Turma sem nome'}), 400
+        if not data.get("turno"):
+            return jsonify({'error': 'Turma sem turno'}), 400
+        if "ativo" not in data:
+            return jsonify({'error': 'Campo "ativo" obrigatório'}), 400
 
-@turmas_bp.route('/filtrar/<int:idTurma>')
-class FiltrarTurma(Resource):
-    @turmas_bp.marshal_with(turma_output)
-    def get(self, idTurma):
-        """
-        Filtra uma turma pelo ID
-        """
-        return turmas.filtrar_por_id(db.session, idTurma)
+        nova_turma, status = turmas.adicionar_turma(db.session, data)
+        return jsonify(nova_turma), status
+    except Exception as e:
+        return jsonify({'error': 'Erro ao adicionar turma.', 'details': str(e)}), 500
 
-@turmas_bp.route('/criar')
-class CriarTurma(Resource):
-    @turmas_bp.expect(turma_model)
-    def post(self):
-        """
-        Cria uma nova turma
-        """
-        dados = request.json
-        nova_turma, status = turmas.adicionar_turma(db.session, dados)
-        return nova_turma, status
+@turmas_bp.route('/filtrar/<int:idTurma>', methods=['GET'])
+def filtrar_turma(idTurma):
+    try:
+        turma = turmas.filtrar_por_id(db.session, idTurma)
+        if turma:
+            return jsonify(turma), 200
+        return jsonify({"error": "Turma não encontrada"}), 404
+    except Exception as e:
+        return jsonify({'error': 'Erro ao filtrar turma.', 'details': str(e)}), 500
 
-@turmas_bp.route('/atualizar/<int:idTurma>')
-class AtualizarTurma(Resource):
-    @turmas_bp.expect(turma_model)
-    def put(self, idTurma):
-        """
-        Atualiza os dados de uma turma
-        """
-        dados = request.json
-        turma_atualizada, status = turmas.atualizar_turma(db.session, idTurma, dados)
-        return turma_atualizada, status
+@turmas_bp.route('/atualizar/<int:idTurma>', methods=['PUT'])
+def atualizar_turma(idTurma):
+    try:
+        data = request.json
 
-@turmas_bp.route('/<int:turma_id>')
-class DeletarTurma(Resource):
-    def delete(self, turma_id):
-        """
-        Deleta uma turma pelo ID
-        """
+        if not data.get('nome'):
+            return jsonify({'error': 'Turma sem nome'}), 400
+
+        turma_atualizada, status = turmas.atualizar_turma(db.session, idTurma, data)
+        if turma_atualizada:
+            return jsonify(turma_atualizada), status
+        return jsonify({'error': 'Turma não encontrada.'}), 404
+    except Exception as e:
+        return jsonify({'error': 'Erro ao atualizar turma.', 'details': str(e)}), 500
+
+@turmas_bp.route('/<int:turma_id>', methods=['DELETE'])
+def deletar_turma(turma_id):
+    try:
         result, status = turmas.deletar_turma(db.session, turma_id)
-        return result, status
+        return jsonify(result), status
+    except Exception as e:
+        return jsonify({'error': 'Erro ao deletar turma.', 'details': str(e)}), 500
 
 @turmas_bp.route('/reseta', methods=['POST', 'DELETE'])
-class ResetarTurmas(Resource):
-    def post(self):
-        """
-        Reseta os dados das turmas
-        """
+def resetar_dados():
+    try:
         result, status = turmas.resetar_turmas(db.session)
-        return result, status
-
-    def delete(self):
-        """
-        Reseta os dados das turmas
-        """
-        result, status = turmas.resetar_turmas(db.session)
-        return result, status
+        return jsonify(result), status
+    except Exception as e:
+        return jsonify({'error': 'Erro ao resetar dados.', 'details': str(e)}), 500
