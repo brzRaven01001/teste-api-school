@@ -1,6 +1,4 @@
 from swagger.swagger_config import configure_swagger
-import os
-import sys
 from config import app, db
 from controllers.alunos import alunos_bp
 from controllers.turmas import turmas_bp

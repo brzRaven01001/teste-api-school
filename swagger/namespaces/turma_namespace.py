@@ -1,5 +1,5 @@
 from flask_restx import Namespace, Resource, fields
-from repository.turmas import listar_turmas, adicionar_turma, filtrar_por_id, atualizar_turma, deletar_turma, resetar_turmas
+from controllers.turmas import listar_turmas, criar_turma, filtrar_turma, atualizar_turma, deletar_turma, resetar_dados
 
 turmas_ns = Namespace('turmas', description='Operações relacionadas a turmas')
 
@@ -23,26 +23,28 @@ turma_output_model = turmas_ns.model('TurmaOutput', {
 })
 
 
-@turmas_ns.route('/')
+@turmas_ns.route('/listar')
 class TurmasResource(Resource):
-    @turmas_ns.marshal_with(turma_output_model, as_list=True)
+    @turmas_ns.marshal_with(turma_model, as_list=True)
     def get(self):
         """Listar todas as turmas"""
         return listar_turmas()
 
+@turmas_ns.route('/criar')
+class CriarTurmaResource(Resource):
     @turmas_ns.expect(turma_model)
     @turmas_ns.marshal_with(turma_output_model)
     def post(self):
-        """Adicionar uma nova turma"""
+        """Criar uma nova turma"""
         dados = turmas_ns.payload
-        return adicionar_turma(dados)
+        return criar_turma(dados)
 
 @turmas_ns.route('/<int:idTurma>')
 class TurmaResource(Resource):
     @turmas_ns.marshal_with(turma_output_model)
     def get(self, idTurma):
         """Obtém uma turma por ID"""
-        return filtrar_por_id(idTurma)
+        return filtrar_turma(idTurma)
 
     @turmas_ns.expect(turma_model)
     @turmas_ns.marshal_with(turma_output_model)
@@ -59,4 +61,4 @@ class TurmaResource(Resource):
 class ResetarTurmasResource(Resource):
     def delete(self):
         """Resetar todas as turmas"""
-        return resetar_turmas()
+        return resetar_dados()

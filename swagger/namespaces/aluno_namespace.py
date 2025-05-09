@@ -1,9 +1,9 @@
 from flask_restx import Namespace, Resource, fields
-from repository.alunos import listar_alunos, adicionar_aluno, filtrar_por_id, atualizar_aluno, deletar_aluno, resetar_alunos
+from controllers.alunos import listar_alunos, criar_aluno, filtrar_aluno, atualizar_aluno, deletar_aluno, resetar_dados
 
 alunos_ns = Namespace('alunos', description='Operações relacionadas a alunos')
 
-aluno_model = alunos_ns.model('AlunoInput', {
+aluno_model = alunos_ns.model('Aluno', {
     "nome": fields.String(required=True, description="Nome do aluno"),
     "data_nascimento": fields.String(required=True, description="Data de nascimento (YYYY-MM-DD)"),
     "nota_primeiro_semestre": fields.Float(required=True, description="Nota do primeiro semestre"),
@@ -19,12 +19,12 @@ aluno_output_model = alunos_ns.model('AlunoOutput', {
     "nota_primeiro_semestre": fields.Float(description="Nota do primeiro semestre"),
     "nota_segundo_semestre": fields.Float(description="Nota do segundo semestre"),
     "media_final": fields.Float(description="Média final do aluno"),
-    "turma": fields.List(fields.Nested(alunos_ns.model('TurmaAluno', {
+    "turma": fields.List(fields.Nested(alunos_ns.model('Turma', {
         "id": fields.Integer(description="ID da turma"),
         "nome": fields.String(description="Nome da turma"),
         "turno": fields.String(description="Turno da turma"),
         "ativo": fields.Boolean(description="Status da turma"),
-        "professor": fields.Nested(alunos_ns.model('ProfessorTurma', {
+        "professor": fields.Nested(alunos_ns.model('Professor', {
             "id": fields.Integer(description="ID do professor"),
             "nome": fields.String(description="Nome do professor")
         }), description="Professor responsável pela turma", allow_null=True)
@@ -36,7 +36,7 @@ aluno_output_model = alunos_ns.model('AlunoOutput', {
 
 @alunos_ns.route('/listar')
 class AlunosResource(Resource):
-    @alunos_ns.marshal_with(aluno_output_model, as_list=True)
+    @alunos_ns.marshal_with(aluno_model, as_list=True)
     def get(self):
         """Listar todos os alunos"""
         return listar_alunos()
@@ -48,14 +48,14 @@ class CriarAlunoResource(Resource):
     def post(self):
         """Criar um novo aluno"""
         dados = alunos_ns.payload
-        return adicionar_aluno(dados)
+        return criar_aluno(dados)
     
 @alunos_ns.route('/<int:idAluno>')
 class AlunoResource(Resource):
     @alunos_ns.marshal_with(aluno_output_model)
     def get(self, idAluno):
         """Obtém um aluno por ID"""
-        return filtrar_por_id(idAluno)
+        return filtrar_aluno(idAluno)
 
     @alunos_ns.expect(aluno_model)
     @alunos_ns.marshal_with(aluno_output_model)
@@ -72,4 +72,4 @@ class AlunoResource(Resource):
 class ResetarAlunosResource(Resource):
     def delete(self):
         """Resetar todos os alunos"""
-        return resetar_alunos()
+        return resetar_dados()

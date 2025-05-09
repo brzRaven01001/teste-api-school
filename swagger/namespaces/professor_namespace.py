@@ -1,5 +1,5 @@
 from flask_restx import Namespace, Resource, fields
-from repository.professores import listar_professores, criar_professor, get_professor_by_id, atualizar_professor, deletar_professor, resetar_dados
+from controllers.professores import listar_professores, criar_professor, get_professor_by_id, atualizar_professor, deletar_professor, resetar_dados
 
 professores_ns = Namespace('professores', description='Operações relacionadas a professores')
 
@@ -26,17 +26,20 @@ professor_output_model = professores_ns.model('ProfessorOutput', {
     })), description="Lista de turmas que o professor leciona")
 })
 
-@professores_ns.route('/')
+@professores_ns.route('/listar')
 class ProfessoresResource(Resource):
-    @professores_ns.marshal_with(professor_output_model, as_list=True)
+    @professores_ns.marshal_with(professor_model, as_list=True)
     def get(self):
         """Listar todos os professores"""
         return listar_professores()
 
+    
+@professores_ns.route('/criar')
+class CriarProfessorResource(Resource):
     @professores_ns.expect(professor_model)
     @professores_ns.marshal_with(professor_output_model)
     def post(self):
-        """Adicionar um novo professor"""
+        """Criar um novo professor"""
         dados = professores_ns.payload
         return criar_professor(dados)
 
