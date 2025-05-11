@@ -1,21 +1,19 @@
-from flask import Flask, redirect, url_for
-from models.professores import professor_bp
-from models.alunos import alunos_bp
-from models.turmas import turmas_bp
+from swagger.swagger_config import configure_swagger
+from config import app, db
+from controllers.alunos import alunos_bp
+from controllers.turmas import turmas_bp
+from controllers.professores import professores_bp
 
-app = Flask(__name__, template_folder='templates')
 
-
-app.register_blueprint(professor_bp, url_prefix='/professor')
+app.register_blueprint(professores_bp, url_prefix='/professor')
 app.register_blueprint(alunos_bp, url_prefix='/alunos')
 app.register_blueprint(turmas_bp, url_prefix='/turmas')
 
+configure_swagger(app)
 
-
-@app.route('/')
-def home():
-    return redirect(url_for('login_bp.login'))
+with app.app_context():
+    db.create_all()
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host=app.config["HOST"], port=app.config["PORT"], debug=app.config["DEBUG"])

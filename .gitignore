@@ -1,0 +1,21 @@
+# Dependências
+venv/
+__pycache__/
+
+# Arquivos de configuração de ambiente
+.env
+*.env
+
+# Arquivos de compilação
+*.pyc
+
+# Ferramentas de IDE
+.idea/
+.vscode/
+
+# Ignorar arquivos específicos, como logs ou bancos de dados
+*.log
+*.sqlite3
+
+# Arquivos de configuração do Docker
+.docker/
