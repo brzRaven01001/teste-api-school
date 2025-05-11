@@ -1,6 +1,11 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Table, ForeignKey
 from sqlalchemy.orm import relationship
 from config import db
+
+aluno_turma = Table('aluno_turma', db.Model.metadata,
+    Column('aluno_id', Integer, ForeignKey('alunos.id'), primary_key=True),
+    Column('turma_id', Integer, ForeignKey('turmas.id'), primary_key=True)
+)
 
 class Aluno(db.Model):
     __tablename__ = 'alunos'
@@ -12,8 +17,8 @@ class Aluno(db.Model):
     nota_segundo_semestre = Column(Float)
     media_final = Column(Float)
 
-    turma_id = Column(Integer, ForeignKey('turmas.id'))
-    turma = relationship('Turma', back_populates='alunos')
+
+    turmas = relationship('Turma', secondary=aluno_turma, back_populates='alunos')
 
     def to_dict(self):
         return {
@@ -22,7 +27,7 @@ class Aluno(db.Model):
             "data_nascimento": self.data_nascimento,
             "nota_primeiro_semestre": self.nota_primeiro_semestre,
             "nota_segundo_semestre": self.nota_segundo_semestre,
-            "turma_id": self.turma_id
+            "turma_id": [turma.id for turma in self.turmas]
         }
     
     def to_dict_completo(self):
@@ -34,13 +39,9 @@ class Aluno(db.Model):
             "nota_primeiro_semestre": self.nota_primeiro_semestre,
             "nota_segundo_semestre": self.nota_segundo_semestre,
             "media_final": self.media_final,
-            "turma": [{"id": self.turma.id,
-                "nome": self.turma.nome,
-                "turno": self.turma.turno,
-                "ativo": self.turma.ativo,
-                "professor": {
-                    "id": self.turma.professor.id,
-                    "nome": self.turma.professor.nome
-                } if self.turma and self.turma.professor else None
-                }]
+            "turma": [{"id": turma.id,
+                        "nome": turma.nome,
+                        "turno": turma.turno,
+                        "ativo": turma.ativo,
+                        "professor_id": turma.professor_id} for turma in self.turmas]
         }

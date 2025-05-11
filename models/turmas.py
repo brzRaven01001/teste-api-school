@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Table, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from config import db
-
+from models.alunos import aluno_turma
 
 class Turma(db.Model):
     __tablename__ = 'turmas'
@@ -13,7 +13,7 @@ class Turma(db.Model):
     professor_id = Column(Integer, ForeignKey('professores.id'))
     professor = relationship('Professor', back_populates='turmas')
 
-    alunos = relationship('Aluno', back_populates='turma', cascade="all, delete-orphan")
+    alunos = relationship('Aluno', secondary=aluno_turma, back_populates='turmas')
 
     def to_dict(self):
         return {
@@ -31,5 +31,6 @@ class Turma(db.Model):
             "turno": self.turno,
             "ativo": self.ativo,
             "professor_id": self.professor_id,
+            "professor_nome": self.professor.nome if self.professor else None,
             "alunos": [{"id": aluno.id, "nome": aluno.nome} for aluno in self.alunos]
         }

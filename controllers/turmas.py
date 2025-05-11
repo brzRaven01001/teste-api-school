@@ -32,10 +32,11 @@ def criar_turma():
 @turmas_bp.route('/filtrar/<int:idTurma>', methods=['GET'])
 def filtrar_turma(idTurma):
     try:
-        turma = turmas.filtrar_por_id(db.session, idTurma)
-        if turma:
-            return jsonify(turma), 200
-        return jsonify({"error": "Turma não encontrada"}), 404
+        turma = turmas.filtrar_por_id(db.session, idTurma)       
+        if "error" in turma:
+            return jsonify(turma), 404
+        return jsonify(turma), 200
+    
     except Exception as e:
         return jsonify({'error': 'Erro ao filtrar turma.', 'details': str(e)}), 500
 

@@ -33,5 +33,5 @@ def deletar_aluno(idAluno):
 
 @alunos_bp.route('/reseta', methods=['POST', 'DELETE'])
 def resetar_dados():
-    result, status = alunos.resetar_dados(db.session)
+    result, status = alunos.resetar_alunos(db.session)
     return jsonify(result), status

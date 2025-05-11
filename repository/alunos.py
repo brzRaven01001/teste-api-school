@@ -1,4 +1,5 @@
-from models.alunos import db, Aluno
+from models.alunos import Aluno
+from models.turmas import Turma
 from sqlalchemy.orm import Session
 
 def listar_alunos(db: Session):
@@ -17,6 +18,9 @@ def adicionar_aluno(db: Session, dados: dict):
         nota_segundo_semestre=dados.get("nota_segundo_semestre"),
         media_final=dados.get("media_final")
     )
+    if "turma_id" in dados:
+        turmas = db.query(Turma).filter(Turma.id.in_(dados["turma_id"])).all()
+        novo_aluno.turmas = turmas
 
     db.add(novo_aluno)
     db.commit()

@@ -4,6 +4,7 @@ from controllers.alunos import listar_alunos, criar_aluno, filtrar_aluno, atuali
 alunos_ns = Namespace('alunos', description='Operações relacionadas a alunos')
 
 aluno_model = alunos_ns.model('Aluno', {
+    "id": fields.Integer(description="ID do aluno"),
     "nome": fields.String(required=True, description="Nome do aluno"),
     "data_nascimento": fields.String(required=True, description="Data de nascimento (YYYY-MM-DD)"),
     "nota_primeiro_semestre": fields.Float(required=True, description="Nota do primeiro semestre"),
